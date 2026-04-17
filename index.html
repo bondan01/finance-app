@@ -118,13 +118,14 @@ function save() {
 function getHari() {
   let hari = new Date().getDay();
   let jadwal = {
-    1: { nama: "Senin", max: 20000, note: "Boleh makan katsu 1x" },
-    2: { nama: "Selasa", max: 20000, note: "Boleh makan katsu 1x" },
-    3: { nama: "Rabu", max: 0, note: "HEMAT! Jangan jajan" },
-    4: { nama: "Kamis", max: 5000, note: "Snack kecil saja" },
-    5: { nama: "Jumat", max: 5000, note: "Snack kecil saja" },
-    6: { nama: "Sabtu", max: 15000, note: "Santai tapi jangan boros" },
-    0: { nama: "Minggu", max: 15000, note: "Santai" }
+    let hari = new Date().getDay();
+  let jadwal = {
+    1: { nama: "Senin", max: 20000, note: "Makan katsu 1x" },
+    2: { nama: "Selasa", max: 20000, note: "Makan katsu1x" },
+    3: { nama: "Rabu", max: 0, note: "Libur bro" },
+    4: { nama: "Kamis", max: 15000, note: "Makan katsu 1x" },
+    5: { nama: "Jumat", max: 15000, note: "Makan katsu 1x" },
+   
   };
   return jadwal[hari];
 }
@@ -181,11 +182,11 @@ function checkStatus() {
 
   let status = document.getElementById("status");
 
-  if (totalHariIni > today.max) {
-    status.innerHTML = "⚠️ Kamu melebihi batas hari ini!";
-    status.className = "warning";
+ if (totalHariIni > today.max) {
+    status.innerHTML = "lu dah  boros jangan diulangin lagi!!";
+    status.className = "Bahaya";
   } else {
-    status.innerHTML = "✅ Aman sesuai rencana";
+    status.innerHTML = "Bagus bon pertahankan!";
     status.className = "good";
   }
 }
