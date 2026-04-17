@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Finance App v4</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  margin: 0;
+}
+
+.header {
+  padding: 15px;
+  text-align: center;
+  background: #1e293b;
+}
+
+.container {
+  padding: 15px;
+}
+
+.card {
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  background: #22c55e;
+  color: white;
+  font-weight: bold;
+}
+
+.warning {
+  color: #f87171;
+  font-weight: bold;
+}
+
+.good {
+  color: #4ade80;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">💰 Finance App v4</div>
+
+<div class="container">
+
+<div class="card">
+  <h3>📅 Reminder Hari Ini</h3>
+  <div id="reminder"></div>
+</div>
+
+<div class="card">
+  <h3>Tambah Uang</h3>
+  <input type="number" id="uangMasuk">
+  <button onclick="tambahUang()">Tambah</button>
+</div>
+
+<div class="card">
+  <h3>Saldo</h3>
+  <p>Makan: <span id="makan">0</span></p>
+  <p>Kebutuhan: <span id="kebutuhan">0</span></p>
+  <p>Tabungan: <span id="tabungan">0</span></p>
+</div>
+
+<div class="card">
+  <h3>Pengeluaran</h3>
+  <select id="kategori">
+    <option value="makan">Makan</option>
+    <option value="kebutuhan">Kebutuhan</option>
+  </select>
+  <input type="number" id="jumlah">
+  <button onclick="tambah()">Tambah</button>
+</div>
+
+<div class="card">
+  <h3>⚠️ Status Hari Ini</h3>
+  <div id="status"></div>
+</div>
+
+<div class="card">
+  <h3>📊 Grafik</h3>
+  <canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("data")) || {
+  saldo: { makan: 0, kebutuhan: 0, tabungan: 0 },
+  history: []
+};
+
+function save() {
+  localStorage.setItem("data", JSON.stringify(data));
+}
+
+// JADWAL HARIAN
+function getHari() {
+  let hari = new Date().getDay();
+  let jadwal = {
+    1: { nama: "Senin", max: 20000, note: "Boleh makan katsu 1x" },
+    2: { nama: "Selasa", max: 20000, note: "Boleh makan katsu 1x" },
+    3: { nama: "Rabu", max: 0, note: "HEMAT! Jangan jajan" },
+    4: { nama: "Kamis", max: 5000, note: "Snack kecil saja" },
+    5: { nama: "Jumat", max: 5000, note: "Snack kecil saja" },
+    6: { nama: "Sabtu", max: 15000, note: "Santai tapi jangan boros" },
+    0: { nama: "Minggu", max: 15000, note: "Santai" }
+  };
+  return jadwal[hari];
+}
+
+// REMINDER
+function updateReminder() {
+  let today = getHari();
+  document.getElementById("reminder").innerHTML =
+    `<b>${today.nama}</b><br>Max: ${today.max}<br>${today.note}`;
+}
+
+// TAMBAH UANG
+function tambahUang() {
+  let uang = parseInt(document.getElementById("uangMasuk").value);
+
+  data.saldo.makan += uang * 0.75;
+  data.saldo.kebutuhan += uang * 0.15;
+  data.saldo.tabungan += uang * 0.10;
+
+  save();
+  updateUI();
+}
+
+// TAMBAH PENGELUARAN
+function tambah() {
+  let kategori = document.getElementById("kategori").value;
+  let jumlah = parseInt(document.getElementById("jumlah").value);
+
+  if (data.saldo[kategori] < jumlah) {
+    alert("Saldo tidak cukup!");
+    return;
+  }
+
+  data.saldo[kategori] -= jumlah;
+
+  data.history.push({
+    kategori,
+    jumlah,
+    date: new Date().toDateString()
+  });
+
+  save();
+  updateUI();
+}
+
+// STATUS HARIAN
+function checkStatus() {
+  let today = getHari();
+  let todayStr = new Date().toDateString();
+
+  let totalHariIni = data.history
+    .filter(h => h.date === todayStr)
+    .reduce((a,b)=>a+b.jumlah,0);
+
+  let status = document.getElementById("status");
+
+  if (totalHariIni > today.max) {
+    status.innerHTML = "⚠️ Kamu melebihi batas hari ini!";
+    status.className = "warning";
+  } else {
+    status.innerHTML = "✅ Aman sesuai rencana";
+    status.className = "good";
+  }
+}
+
+// UPDATE UI
+function updateUI() {
+  document.getElementById("makan").innerText = Math.floor(data.saldo.makan);
+  document.getElementById("kebutuhan").innerText = Math.floor(data.saldo.kebutuhan);
+  document.getElementById("tabungan").innerText = Math.floor(data.saldo.tabungan);
+
+  updateReminder();
+  checkStatus();
+  updateChart();
+}
+
+// CHART
+let chart;
+function updateChart() {
+  let makan = data.history.filter(h => h.kategori==="makan").reduce((a,b)=>a+b.jumlah,0);
+  let kebutuhan = data.history.filter(h => h.kategori==="kebutuhan").reduce((a,b)=>a+b.jumlah,0);
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(document.getElementById("chart"), {
+    type: "pie",
+    data: {
+      labels: ["Makan", "Kebutuhan"],
+      datasets: [{
+        data: [makan, kebutuhan]
+      }]
+    }
+  });
+}
+
+updateUI();
+</script>
+
+</body>
+</html>
