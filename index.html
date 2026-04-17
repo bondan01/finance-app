@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Laporan keungan mingguan</title>
+<title>Laporan keuangan mingguan</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -60,7 +60,7 @@ button {
 
 <body>
 
-<div class="header">Harus di ulang</div>
+<div class="header">💰 Laporan Keuangan Mingguan</div>
 
 <div class="container">
 
@@ -71,7 +71,7 @@ button {
 
 <div class="card">
   <h3>Tambah Uang</h3>
-  <input type="number" id="uangMasuk">
+  <input type="text" id="uangMasuk">
   <button onclick="tambahUang()">Tambah</button>
 </div>
 
@@ -88,7 +88,7 @@ button {
     <option value="makan">Makan</option>
     <option value="kebutuhan">Kebutuhan</option>
   </select>
-  <input type="number" id="jumlah">
+  <input type="text" id="jumlah">
   <button onclick="tambah()">Tambah</button>
 </div>
 
@@ -102,16 +102,23 @@ button {
   <canvas id="chart"></canvas>
 </div>
 
+<!-- ✅ RESET BUTTON -->
+<div class="card">
+  <h3>⚙️ Pengaturan</h3>
+  <button onclick="resetData()">Reset Data</button>
+</div>
+
 </div>
 
 <script>
-  function formatRupiah(angka) {
+function formatRupiah(angka) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0
   }).format(angka);
 }
+
 let data = JSON.parse(localStorage.getItem("data")) || {
   saldo: { makan: 0, kebutuhan: 0, tabungan: 0 },
   history: []
@@ -121,7 +128,7 @@ function save() {
   localStorage.setItem("data", JSON.stringify(data));
 }
 
-// JADWAL HARIAN
+// JADWAL
 function getHari() {
   let hari = new Date().getDay();
 
@@ -133,13 +140,8 @@ function getHari() {
     5: { nama: "Jumat", max: 15000, note: "Makan katsu 1x" }
   };
 
-  
   if (!jadwal[hari]) {
-    return {
-      nama: "Libur",
-      max: 0,
-      note: "libur bro"
-    };
+    return { nama: "Libur", max: 0, note: "libur bro" };
   }
 
   return jadwal[hari];
@@ -149,14 +151,12 @@ function getHari() {
 function updateReminder() {
   let today = getHari();
   document.getElementById("reminder").innerHTML =
-    `<b>${today.nama}</b><br>Max: ${today.max}<br>${today.note}`;
+    `<b>${today.nama}</b><br>Max: Rp ${today.max.toLocaleString("id-ID")}<br>${today.note}`;
 }
 
 // TAMBAH UANG
 function tambahUang() {
-  let uang = parseInt(
-    document.getElementById("uangMasuk").value.replace(/\./g, "")
-  );
+  let uang = parseInt(document.getElementById("uangMasuk").value.replace(/\./g, ""));
 
   data.saldo.makan += uang * 0.75;
   data.saldo.kebutuhan += uang * 0.15;
@@ -169,9 +169,7 @@ function tambahUang() {
 // TAMBAH PENGELUARAN
 function tambah() {
   let kategori = document.getElementById("kategori").value;
-  let jumlah = parseInt(
-    document.getElementById("jumlah").value.replace(/\./g, "")
-  );
+  let jumlah = parseInt(document.getElementById("jumlah").value.replace(/\./g, ""));
 
   if (data.saldo[kategori] < jumlah) {
     alert("Saldo tidak cukup!");
@@ -189,7 +187,8 @@ function tambah() {
   save();
   updateUI();
 }
-// STATUS HARIAN
+
+// STATUS
 function checkStatus() {
   let today = getHari();
   let todayStr = new Date().toDateString();
@@ -201,7 +200,7 @@ function checkStatus() {
   let status = document.getElementById("status");
 
   if (totalHariIni > today.max) {
-    status.innerHTML = "lu dah  boros jangan diulangin lagi!!";
+    status.innerHTML = "lu dah boros jangan diulangin lagi!!";
     status.className = "warning";
   } else {
     status.innerHTML = "Bagus bon pertahankan!";
@@ -211,21 +210,44 @@ function checkStatus() {
 
 // UPDATE UI
 function updateUI() {
-  document.getElementById("makan").innerText =
-    formatRupiah(Math.floor(data.saldo.makan));
-
-  document.getElementById("kebutuhan").innerText =
-    formatRupiah(Math.floor(data.saldo.kebutuhan));
-
-  document.getElementById("tabungan").innerText =
-    formatRupiah(Math.floor(data.saldo.tabungan));
+  document.getElementById("makan").innerText = formatRupiah(data.saldo.makan);
+  document.getElementById("kebutuhan").innerText = formatRupiah(data.saldo.kebutuhan);
+  document.getElementById("tabungan").innerText = formatRupiah(data.saldo.tabungan);
 
   updateReminder();
   checkStatus();
   updateChart();
 }
 
-// FORMAT INPUT OTOMATIS
+// CHART
+let chart;
+function updateChart() {
+  let makan = data.history.filter(h => h.kategori==="makan").reduce((a,b)=>a+b.jumlah,0);
+  let kebutuhan = data.history.filter(h => h.kategori==="kebutuhan").reduce((a,b)=>a+b.jumlah,0);
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(document.getElementById("chart"), {
+    type: "pie",
+    data: {
+      labels: ["Makan", "Kebutuhan"],
+      datasets: [{
+        data: [makan, kebutuhan]
+      }]
+    }
+  });
+}
+
+// RESET
+function resetData() {
+  let konfirmasi = confirm("Yakin mau reset semua data?");
+  if (konfirmasi) {
+    localStorage.removeItem("data");
+    location.reload();
+  }
+}
+
+// FORMAT INPUT
 document.getElementById("jumlah").addEventListener("input", function(e){
   let angka = e.target.value.replace(/\D/g,"");
   e.target.value = new Intl.NumberFormat("id-ID").format(angka);
@@ -236,9 +258,7 @@ document.getElementById("uangMasuk").addEventListener("input", function(e){
   e.target.value = new Intl.NumberFormat("id-ID").format(angka);
 });
 
-updateUI();
-</script>
-
+// INIT
 updateUI();
 </script>
 
