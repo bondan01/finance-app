@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Laporan keuangan mingguan bondan</title>
+<title>harus di ulang</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -60,7 +60,7 @@ button {
 
 <body>
 
-<div class="header">Laporan mingguan uang bondan</div>
+<div class="header">💰 Finance App v4</div>
 
 <div class="container">
 
@@ -105,6 +105,13 @@ button {
 </div>
 
 <script>
+  function formatRupiah(angka) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0
+  }).format(angka);
+}
 let data = JSON.parse(localStorage.getItem("data")) || {
   saldo: { makan: 0, kebutuhan: 0, tabungan: 0 },
   history: []
@@ -147,7 +154,9 @@ function updateReminder() {
 
 // TAMBAH UANG
 function tambahUang() {
-  let uang = parseInt(document.getElementById("uangMasuk").value);
+  let uang = parseInt(
+    document.getElementById("uangMasuk").value.replace(/\./g, "")
+  );
 
   data.saldo.makan += uang * 0.75;
   data.saldo.kebutuhan += uang * 0.15;
@@ -160,7 +169,9 @@ function tambahUang() {
 // TAMBAH PENGELUARAN
 function tambah() {
   let kategori = document.getElementById("kategori").value;
-  let jumlah = parseInt(document.getElementById("jumlah").value);
+  let jumlah = parseInt(
+    document.getElementById("jumlah").value.replace(/\./g, "")
+  );
 
   if (data.saldo[kategori] < jumlah) {
     alert("Saldo tidak cukup!");
@@ -178,7 +189,6 @@ function tambah() {
   save();
   updateUI();
 }
-
 // STATUS HARIAN
 function checkStatus() {
   let today = getHari();
@@ -190,7 +200,7 @@ function checkStatus() {
 
   let status = document.getElementById("status");
 
- if (totalHariIni > today.max) {
+  if (totalHariIni > today.max) {
     status.innerHTML = "lu dah  boros jangan diulangin lagi!!";
     status.className = "warning";
   } else {
@@ -201,33 +211,33 @@ function checkStatus() {
 
 // UPDATE UI
 function updateUI() {
-  document.getElementById("makan").innerText = Math.floor(data.saldo.makan);
-  document.getElementById("kebutuhan").innerText = Math.floor(data.saldo.kebutuhan);
-  document.getElementById("tabungan").innerText = Math.floor(data.saldo.tabungan);
+  document.getElementById("makan").innerText =
+    formatRupiah(Math.floor(data.saldo.makan));
+
+  document.getElementById("kebutuhan").innerText =
+    formatRupiah(Math.floor(data.saldo.kebutuhan));
+
+  document.getElementById("tabungan").innerText =
+    formatRupiah(Math.floor(data.saldo.tabungan));
 
   updateReminder();
   checkStatus();
   updateChart();
 }
 
-// CHART
-let chart;
-function updateChart() {
-  let makan = data.history.filter(h => h.kategori==="makan").reduce((a,b)=>a+b.jumlah,0);
-  let kebutuhan = data.history.filter(h => h.kategori==="kebutuhan").reduce((a,b)=>a+b.jumlah,0);
+// FORMAT INPUT OTOMATIS
+document.getElementById("jumlah").addEventListener("input", function(e){
+  let angka = e.target.value.replace(/\D/g,"");
+  e.target.value = new Intl.NumberFormat("id-ID").format(angka);
+});
 
-  if (chart) chart.destroy();
+document.getElementById("uangMasuk").addEventListener("input", function(e){
+  let angka = e.target.value.replace(/\D/g,"");
+  e.target.value = new Intl.NumberFormat("id-ID").format(angka);
+});
 
-  chart = new Chart(document.getElementById("chart"), {
-    type: "pie",
-    data: {
-      labels: ["Makan", "Kebutuhan"],
-      datasets: [{
-        data: [makan, kebutuhan]
-      }]
-    }
-  });
-}
+updateUI();
+</script>
 
 updateUI();
 </script>
