@@ -117,16 +117,24 @@ function save() {
 // JADWAL HARIAN
 function getHari() {
   let hari = new Date().getDay();
-  let jadwal = {
-    let hari = new Date().getDay();
+
   let jadwal = {
     1: { nama: "Senin", max: 20000, note: "Makan katsu 1x" },
-    2: { nama: "Selasa", max: 20000, note: "Makan katsu1x" },
+    2: { nama: "Selasa", max: 20000, note: "Makan katsu 1x" },
     3: { nama: "Rabu", max: 0, note: "Libur bro" },
     4: { nama: "Kamis", max: 15000, note: "Makan katsu 1x" },
-    5: { nama: "Jumat", max: 15000, note: "Makan katsu 1x" },
-   
+    5: { nama: "Jumat", max: 15000, note: "Makan katsu 1x" }
   };
+
+  
+  if (!jadwal[hari]) {
+    return {
+      nama: "Libur",
+      max: 0,
+      note: "libur bro"
+    };
+  }
+
   return jadwal[hari];
 }
 
@@ -184,7 +192,7 @@ function checkStatus() {
 
  if (totalHariIni > today.max) {
     status.innerHTML = "lu dah  boros jangan diulangin lagi!!";
-    status.className = "Bahaya";
+    status.className = "warning";
   } else {
     status.innerHTML = "Bagus bon pertahankan!";
     status.className = "good";
